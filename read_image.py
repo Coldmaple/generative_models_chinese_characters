@@ -1,6 +1,8 @@
 ### Transfer binary image data to numpy array 
 
-## import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.image as mpimg
 import math
@@ -28,21 +30,22 @@ def read_image(fid):
 
     size = height*height
 
-    image_mat = fread(fid, size*character_num, np.uint8)
+    image_mat = fread(fid, size*character_num, np.uint8)[:,0]
 
-    image_dat = np.zeros((character_num, size, 1))
+    image_dat = np.zeros((character_num, size))
     for i in range(character_num):
         image_dat[i] = image_mat[size*i:size*(i+1)]
 
-    image = image_dat.reshape([character_num, height, height, 1])
-    # a single file is converted to numpy array: [6825, 128, 128, 1]
+    images = image_dat.reshape([character_num, height, height])
+    # a single file is converted to numpy array: [6825, 128, 128]
 
-    return image
+    plt.imshow(images[0])
+    plt.show()
 
-    # plt.imshow(image[0])
-    # plt.show()
+    return images
 
 def read_all_images():
+    characters = np.zeros([6825, 122, 128, 128])
     par_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
     char_path = os.path.abspath(os.path.join(par_path, os.pardir)) + '/character_images/'
     for filename in os.listdir(char_path):
@@ -50,6 +53,12 @@ def read_all_images():
         print(fpath)
         file_id = open(fpath, 'rb')
         image = read_image(file_id)
-        print(image.shape)
+        for i in range(0, 6825):
+            # print(image[i])
+            print(image[i].shape)
+            plt.imshow(image[i])
+            plt.show()
+            # characters[i] = image[i]
+        print(characters)
 
 read_all_images()
