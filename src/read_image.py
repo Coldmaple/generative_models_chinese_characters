@@ -51,20 +51,18 @@ def save_images(idxs, input_dir, image_dir):
 
     file_index = 0
     for filename in os.listdir(char_path):
-        if file_index < 10:
-            fpath = char_path + filename
-            print(fpath)
-            file_id = open(fpath, 'rb')
-            image = read_image(file_id)
-            for i in range(0, len(idxs)):
-                basename = idxs[i]
-                folder = image_dir + '/' + str(idxs[i])
-                if not os.path.exists(folder):
-                    os.makedirs(folder)
-                outfile = '%s/%s.jpg' % (folder, str(file_index))
-                scipy.misc.imsave(outfile, image[idxs[i]])
-            file_index += 1
-        else:
-            break
+        fpath = char_path + filename
+        print(fpath)
+        file_id = open(fpath, 'rb')
+        image = read_image(file_id)
+        for i in range(0, len(idxs)):
+            basename = idxs[i]
+            folder = image_dir + '/' + str(idxs[i])
+            if not os.path.exists(folder):
+                os.makedirs(folder)
+            outfile = '%s/%s.jpg' % (folder, str(file_index))
+            scipy.misc.imsave(outfile, image[idxs[i]])
+        
+        file_index += 1
 
 

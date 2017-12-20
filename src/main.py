@@ -8,6 +8,7 @@ from torch.autograd import Variable
 import pylab as pylab
 from data import ChineseCharacterDataset
 import read_image
+import util
 
 # Model params
 g_input_size = 122     # Random noise dimension coming into generator, per output vector
@@ -33,7 +34,9 @@ def get_generator_input_sampler():
     plt.show()
     return Z
 
-selected_char = np.arange(102, 103)
+selected_char = util.getCharInd()
+
+
 read_image.save_images(idxs=selected_char,
                        input_dir='/Gan_chinese_characters/character/',
                        image_dir='/Volumes/mhr2/Gan_chinese_characters/image')
