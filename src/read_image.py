@@ -8,6 +8,7 @@ import math
 import os
 import os.path
 import scipy.misc
+import util
 
 def fread(fid, nelements, dtype):
     if dtype is np.str:
@@ -65,4 +66,10 @@ def save_images(idxs, input_dir, image_dir):
         
         file_index += 1
 
+selected_char = util.getCharInd()
+
+# Save images to disk
+save_images(idxs=selected_char,
+            input_dir='/Gan_chinese_characters/character_images/',
+            image_dir='/Volumes/mhr2/Gan_chinese_characters/image')
 
