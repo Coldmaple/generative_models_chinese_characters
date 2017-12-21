@@ -38,7 +38,7 @@ class Rescale(object):
 
         new_h, new_w = int(new_h), int(new_w)
 
-        img = transform.resize(image, (new_h, new_w))
+        img = transform.resize(image, (new_h, new_w), mode='constant')
 
         return {'image': img}
 
@@ -80,7 +80,7 @@ class ToTensor(object):
     def __call__(self, sample):
         image = sample['image']
 
-        image = image.reshape([128, 128, 1])
+        image = image.reshape([64, 64, 1])
 
         # swap color axis because
         # numpy image: H x W x C

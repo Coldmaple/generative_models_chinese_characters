@@ -2,7 +2,7 @@ import os
 import os.path
 
 par_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-char_path = os.path.abspath(os.path.join(par_path, os.pardir)) + '/Gan_chinese_characters/character_images_labels/'
+char_path = os.path.abspath(os.path.join(par_path, os.pardir)) + '/generative_models_chinese_characters/character_images_labels/'
 
 def getCharByte():
     

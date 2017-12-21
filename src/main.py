@@ -19,8 +19,10 @@ from preprocess import Rescale
 from preprocess import RandomCrop
 from preprocess import ToTensor
 
+from picutil import show_result
+
 # Model params
-g_input_size = 122     # Random noise dimension coming into generator, per output vector
+g_input_size = 100     # Random noise dimension coming into generator, per output vector
 g_hidden_size = 50   # Generator complexity
 g_output_size = 1    # size of generated output vector
 d_input_size = 100   # Minibatch size - cardinality of distributions
@@ -43,8 +45,9 @@ train_epoch = 20
 
 # Single Chinese character dataset
 transformed_dataset = ChineseCharacterDataset(
-                root_dir='/Volumes/mhr2/Gan_chinese_characters/image/276',
+                root_dir='/media/sf_sharewithvm/cv/generative_models_chinese_characters/image/3103',
                 transform=transforms.Compose([
+                    Rescale(64),
                     ToTensor()
                 ]))
 
@@ -61,7 +64,7 @@ def show_batch_image(sample_batched):
 
 for i_batch, sample_batched in enumerate(dataloader):
     print(i_batch, sample_batched['image'].size())
-    show_batch_image(sample_batched)
+    #show_batch_image(sample_batched)
     plt.show()
 
 # def get_generator_input_sampler():
@@ -72,8 +75,8 @@ for i_batch, sample_batched in enumerate(dataloader):
 #     return Z
 
 # network
-G = generator(16)
-D = discriminator(16)
+G = generator(2)
+D = discriminator(2)
 G.weight_init(mean=0.0, std=0.02)
 D.weight_init(mean=0.0, std=0.02)
 
@@ -96,7 +99,7 @@ for epoch in range(train_epoch):
         x_ = dic['image']
         # Convert ByteTensor to FloatTensor
         x_ = x_.type(torch.FloatTensor)
-        print(x_)
+        #print(x_)
         # train discriminator D
         D.zero_grad()
 
@@ -146,4 +149,5 @@ for epoch in range(train_epoch):
                                                               torch.mean(torch.FloatTensor(G_losses))))
 
 
-
+    p = 'Random_results/MNIST_DCGAN_' + str(epoch + 1) + '.png'
+    show_result(G, (epoch+1), save=True, path=p, isFix=False)
