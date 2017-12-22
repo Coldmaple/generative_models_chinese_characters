@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import os, time
@@ -26,20 +28,21 @@ from preprocess import Normalize
 par_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 
 # Model params
-useGPU=False
+useGPU=True
+model_d = 128
+color_d = 1
 
 # training parameters
 batch_size = 128
 lr = 0.0002
 train_epoch = 200
-model_d = 16
 
 # Single Chinese character dataset
 transformed_dataset = ChineseCharacterDataset(
                 root_dir=par_path + '/images/',
                 transform=transforms.Compose([
                     Rescale(64),
-                    ToTensor(),
+                    ToTensor(color_d),
                     Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
                 ]))
 
@@ -62,7 +65,7 @@ for i_batch, sample_batched in enumerate(dataloader):
 def save_result(G, num_epoch, path, useGPU=False):
     z_ = torch.randn((5*5, 100)).view(-1, 100, 1, 1)
     if useGPU:
-        z = z.cuda()
+        z_ = z_.cuda()
     z_ = Variable(z_, volatile=True)
 
     G.eval()
@@ -86,6 +89,24 @@ def save_result(G, num_epoch, path, useGPU=False):
     plt.savefig(path)
     plt.close()
 
+def save_train_hist(hist, path = 'Train_hist.png'):
+    x = range(len(hist['D_losses']))
+
+    y1 = hist['D_losses']
+    y2 = hist['G_losses']
+
+    plt.plot(x, y1, label='D_loss')
+    plt.plot(x, y2, label='G_loss')
+
+    plt.xlabel('Iter')
+    plt.ylabel('Loss')
+
+    plt.legend(loc=4)
+    plt.grid(True)
+    plt.tight_layout()
+
+    plt.savefig(path)
+    plt.close()
 
 # def get_generator_input_sampler():
 #     # return lambda m, n: torch.rand(m, n)  # Uniform-dist data into generator, _NOT_ Gaussian
@@ -95,8 +116,8 @@ def save_result(G, num_epoch, path, useGPU=False):
 #     return Z
 
 # network
-G = generator(model_d)
-D = discriminator(model_d)
+G = generator(model_d, color_d)
+D = discriminator(model_d, color_d)
 
 if useGPU:
     G=G.cuda()
@@ -107,10 +128,16 @@ D.weight_init(mean=0.0, std=0.02)
 
 # Binary Cross Entropy loss
 BCE_loss = nn.BCELoss()
+if useGPU:
+    BCE_loss = BCE_loss.cuda()
 
 # Adam optimizer
 G_optimizer = optim.Adam(G.parameters(), lr=lr, betas=(0.5, 0.999))
 D_optimizer = optim.Adam(D.parameters(), lr=lr, betas=(0.5, 0.999))
+
+train_hist = {}
+train_hist['D_losses'] = []
+train_hist['G_losses'] = []
 
 print('training start!')
 start_time = time.time()
@@ -147,7 +174,7 @@ for epoch in range(train_epoch):
         z_ = Variable(z_)
         G_result = G(z_)
 
-        D_result = D(G_result).squeeze()
+        D_result = D(G_result.detach()).squeeze()
         D_fake_loss = BCE_loss(D_result, y_fake_)
         D_fake_score = D_result.data.mean()
 
@@ -183,4 +210,12 @@ for epoch in range(train_epoch):
 
 
     p = par_path + '/results/CHINESE_CHAR_DCGAN_' + str(epoch + 1) + '.png'
+    if not os.path.exists(par_path + '/results/'):
+        os.makedirs(par_path + '/results/')
     save_result(G, (epoch+1), path=p, useGPU=useGPU)
+    
+    train_hist['D_losses'].append(torch.mean(torch.FloatTensor(D_losses)))
+    train_hist['G_losses'].append(torch.mean(torch.FloatTensor(G_losses)))
+
+
+    save_train_hist(train_hist, path=par_path + '/results/CC_DCGAN_train_hist.png')

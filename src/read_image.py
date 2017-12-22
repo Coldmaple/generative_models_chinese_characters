@@ -89,6 +89,8 @@ def save_images(idxs, input_dir, image_dir):
     par_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
     char_path = par_path + input_dir
     image_dir = par_path + image_dir
+    if not os.path.exists(image_dir):
+        os.makedirs(image_dir)
 
     file_index = 0
     for filename in os.listdir(char_path):
@@ -99,8 +101,6 @@ def save_images(idxs, input_dir, image_dir):
         for i in range(0, len(idxs)):
             basename = idxs[i]
             folder = image_dir
-            if not os.path.exists(folder):
-                os.makedirs(folder)
             outfile = '%s/%s.jpg' % (folder, str(file_index))
             scipy.misc.imsave(outfile, image[idxs[i]])
         

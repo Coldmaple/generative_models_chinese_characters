@@ -77,10 +77,13 @@ class RandomCrop(object):
 class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
+    def __init__(self, nc):
+        self.nc = nc
+        
     def __call__(self, sample):
         image = sample['image']
 
-        image = image.reshape([64, 64, 1])
+        image = image.reshape([64, 64, self.nc])
 
         # swap color axis because
         # numpy image: H x W x C
