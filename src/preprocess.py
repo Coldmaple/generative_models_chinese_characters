@@ -87,3 +87,14 @@ class ToTensor(object):
         # torch image: C X H X W
         image = image.transpose((2, 0, 1))
         return {'image': torch.from_numpy(image)}
+
+class Normalize(object):
+
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std = std
+    def __call__(self, sample):
+        m = transforms.Normalize(mean=self.mean,std=self.std)
+        image = sample['image']
+        image = m(image)
+        return {'image': image}

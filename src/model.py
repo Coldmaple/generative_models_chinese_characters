@@ -1,11 +1,6 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
-import torch.utils.data as data_utils
-from torch.autograd import Variable
 
 def normal_init(m, mean, std):
     if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):

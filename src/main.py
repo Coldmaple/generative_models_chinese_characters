@@ -14,41 +14,33 @@ from torchvision import transforms, utils
 from data import ChineseCharacterDataset
 from model import generator, discriminator
 
-import util
+import matplotlib.pyplot as plt
+import itertools
+
 from preprocess import Rescale
 from preprocess import RandomCrop
 from preprocess import ToTensor
+from preprocess import Normalize
 
-from picutil import show_result
+
+par_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 
 # Model params
-g_input_size = 100     # Random noise dimension coming into generator, per output vector
-g_hidden_size = 50   # Generator complexity
-g_output_size = 1    # size of generated output vector
-d_input_size = 100   # Minibatch size - cardinality of distributions
-d_hidden_size = 50   # Discriminator complexity
-d_output_size = 1    # Single dimension for 'real' vs. 'fake'
-minibatch_size = d_input_size
-
-d_learning_rate = 2e-4  # 2e-4
-g_learning_rate = 2e-4
-optim_betas = (0.9, 0.999)
-num_epochs = 30000
-print_interval = 200
-d_steps = 1  # 'k' steps in the original GAN paper. Can put the discriminator on higher training freq than generator
-g_steps = 1
+useGPU=False
 
 # training parameters
-batch_size = 16
+batch_size = 128
 lr = 0.0002
-train_epoch = 20
+train_epoch = 200
+model_d = 16
 
 # Single Chinese character dataset
 transformed_dataset = ChineseCharacterDataset(
-                root_dir='/media/sf_sharewithvm/cv/generative_models_chinese_characters/image/3103',
+                root_dir=par_path + '/images/',
                 transform=transforms.Compose([
                     Rescale(64),
-                    ToTensor()
+                    ToTensor(),
+                    Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
                 ]))
 
 dataloader = DataLoader(transformed_dataset, batch_size=batch_size,
@@ -65,7 +57,35 @@ def show_batch_image(sample_batched):
 for i_batch, sample_batched in enumerate(dataloader):
     print(i_batch, sample_batched['image'].size())
     #show_batch_image(sample_batched)
-    plt.show()
+    #plt.show()
+
+def save_result(G, num_epoch, path, useGPU=False):
+    z_ = torch.randn((5*5, 100)).view(-1, 100, 1, 1)
+    if useGPU:
+        z = z.cuda()
+    z_ = Variable(z_, volatile=True)
+
+    G.eval()
+    test_images = G(z_)
+    G.train()
+
+    size_figure_grid = 5
+    fig, ax = plt.subplots(size_figure_grid, size_figure_grid, figsize=(5, 5))
+    for i, j in itertools.product(range(size_figure_grid), range(size_figure_grid)):
+        ax[i, j].get_xaxis().set_visible(False)
+        ax[i, j].get_yaxis().set_visible(False)
+
+    for k in range(5*5):
+        i = k // 5
+        j = k % 5
+        ax[i, j].cla()
+        ax[i, j].imshow(test_images[k, 0].cpu().data.numpy(), cmap='gray')
+
+    label = 'Epoch {0}'.format(num_epoch)
+    fig.text(0.5, 0.04, label, ha='center')
+    plt.savefig(path)
+    plt.close()
+
 
 # def get_generator_input_sampler():
 #     # return lambda m, n: torch.rand(m, n)  # Uniform-dist data into generator, _NOT_ Gaussian
@@ -75,8 +95,13 @@ for i_batch, sample_batched in enumerate(dataloader):
 #     return Z
 
 # network
-G = generator(2)
-D = discriminator(2)
+G = generator(model_d)
+D = discriminator(model_d)
+
+if useGPU:
+    G=G.cuda()
+    D=D.cuda()
+    
 G.weight_init(mean=0.0, std=0.02)
 D.weight_init(mean=0.0, std=0.02)
 
@@ -108,11 +133,17 @@ for epoch in range(train_epoch):
         y_real_ = torch.ones(mini_batch)
         y_fake_ = torch.zeros(mini_batch)
 
-        x_, y_real_, y_fake_ = Variable(x_), Variable(y_real_), Variable(y_fake_)
+        if useGPU:
+            x_, y_real_, y_fake_ = Variable(x_.cuda()), Variable(y_real_.cuda()), Variable(y_fake_.cuda())
+        else:
+            x_, y_real_, y_fake_ = Variable(x_), Variable(y_real_), Variable(y_fake_)
+
         D_result = D(x_).squeeze()
         D_real_loss = BCE_loss(D_result, y_real_)
 
         z_ = torch.randn((mini_batch, 100)).view(-1, 100, 1, 1)
+        if useGPU:
+            z_ = z_.cuda()
         z_ = Variable(z_)
         G_result = G(z_)
 
@@ -132,6 +163,8 @@ for epoch in range(train_epoch):
         G.zero_grad()
 
         z_ = torch.randn((mini_batch, 100)).view(-1, 100, 1, 1)
+        if useGPU:
+            z_=z_.cuda()
         z_ = Variable(z_)
 
         G_result = G(z_)
@@ -149,5 +182,5 @@ for epoch in range(train_epoch):
                                                               torch.mean(torch.FloatTensor(G_losses))))
 
 
-    p = 'Random_results/MNIST_DCGAN_' + str(epoch + 1) + '.png'
-    show_result(G, (epoch+1), save=True, path=p, isFix=False)
+    p = par_path + '/results/CHINESE_CHAR_DCGAN_' + str(epoch + 1) + '.png'
+    save_result(G, (epoch+1), path=p, useGPU=useGPU)

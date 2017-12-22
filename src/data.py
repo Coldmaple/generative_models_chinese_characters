@@ -1,11 +1,6 @@
-from __future__ import print_function, division
 import os
-from skimage import io, transform
 import torch
-import pandas as pd
 from skimage import io, transform
-import numpy as np
-import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 
@@ -23,7 +18,9 @@ class ChineseCharacterDataset(Dataset):
         self.transform = transform
 
     def __len__(self):
-        return 122
+        list = os.listdir(self.root_dir)
+        number_files = len(list)
+        return number_files
 
     def __getitem__(self, idx):
         img_name = self.root_dir + '/' + str(idx) + '.jpg'
