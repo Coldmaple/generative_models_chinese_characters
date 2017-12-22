@@ -35,7 +35,8 @@ color_d = 1
 # training parameters
 batch_size = 128
 lr = 0.0002
-train_epoch = 200
+train_epoch = 20000
+print_interval = 100
 
 # Single Chinese character dataset
 transformed_dataset = ChineseCharacterDataset(
@@ -141,11 +142,11 @@ train_hist['G_losses'] = []
 
 print('training start!')
 start_time = time.time()
-for epoch in range(train_epoch):
-    D_losses = []
-    G_losses = []
+D_losses = []
+G_losses = []
+epoch_start_time = time.time()
 
-    epoch_start_time = time.time()
+for epoch in range(train_epoch):
 
     for dic in dataloader:
         x_ = dic['image']
@@ -202,6 +203,12 @@ for epoch in range(train_epoch):
 
         G_losses.append(G_train_loss.data[0])
 
+    train_hist['D_losses'].append(torch.mean(torch.FloatTensor(D_losses)))
+    train_hist['G_losses'].append(torch.mean(torch.FloatTensor(G_losses)))
+
+    if (epoch+1)%print_interval != 0:
+        continue
+
     epoch_end_time = time.time()
     per_epoch_ptime = epoch_end_time - epoch_start_time
     
@@ -213,9 +220,10 @@ for epoch in range(train_epoch):
     if not os.path.exists(par_path + '/results/'):
         os.makedirs(par_path + '/results/')
     save_result(G, (epoch+1), path=p, useGPU=useGPU)
-    
-    train_hist['D_losses'].append(torch.mean(torch.FloatTensor(D_losses)))
-    train_hist['G_losses'].append(torch.mean(torch.FloatTensor(G_losses)))
-
 
     save_train_hist(train_hist, path=par_path + '/results/CC_DCGAN_train_hist.png')
+
+    
+    D_losses = []
+    G_losses = []
+    epoch_start_time = time.time()
