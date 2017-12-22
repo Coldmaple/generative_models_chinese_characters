@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import os, time
@@ -26,13 +28,13 @@ from preprocess import Normalize
 par_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 
 # Model params
-useGPU=False
+useGPU=True
 
 # training parameters
 batch_size = 128
 lr = 0.0002
 train_epoch = 200
-model_d = 16
+model_d = 32
 
 # Single Chinese character dataset
 transformed_dataset = ChineseCharacterDataset(
@@ -62,7 +64,7 @@ for i_batch, sample_batched in enumerate(dataloader):
 def save_result(G, num_epoch, path, useGPU=False):
     z_ = torch.randn((5*5, 100)).view(-1, 100, 1, 1)
     if useGPU:
-        z = z.cuda()
+        z_ = z_.cuda()
     z_ = Variable(z_, volatile=True)
 
     G.eval()
@@ -183,4 +185,6 @@ for epoch in range(train_epoch):
 
 
     p = par_path + '/results/CHINESE_CHAR_DCGAN_' + str(epoch + 1) + '.png'
+    if not os.path.exists(par_path + '/results/'):
+        os.makedirs(par_path + '/results/')
     save_result(G, (epoch+1), path=p, useGPU=useGPU)
