@@ -1,6 +1,12 @@
 .DS_Store
 .vscode
-image
+images
 labels
 character_images
 src/__pycache__
+results_color
+results
+results-d=128
+monet
+
+
