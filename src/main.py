@@ -29,7 +29,8 @@ par_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 
 # Model params
 useGPU=True
-model_d = 128
+D_d = 64
+G_d = 128
 color_d = 1
 
 # training parameters
@@ -117,8 +118,8 @@ def save_train_hist(hist, path = 'Train_hist.png'):
 #     return Z
 
 # network
-G = generator(model_d, color_d)
-D = discriminator(model_d, color_d)
+G = generator(G_d, color_d)
+D = discriminator(D_d, color_d)
 
 if useGPU:
     G=G.cuda()
